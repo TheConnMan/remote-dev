@@ -1,0 +1,9 @@
+{
+  "ImageId": "ami-0d3d27397471af253",
+  "InstanceType": "t3.xlarge",
+  "KeyName": "Remote Dev",
+  "SecurityGroupIds": ["sg-0221ed06c817b633c"],
+  "Placement": {
+    "AvailabilityZone": "us-east-1f"
+  }
+}
