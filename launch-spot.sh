@@ -26,20 +26,20 @@ echo "Updating security group..."
 EXISTING_RULES=$(aws ec2 describe-security-groups \
   --group-ids $SECURITY_GROUP \
   --query 'SecurityGroups[0].IpPermissions[?FromPort==`22`]' \
-  --output json)
+  --output json 2>/dev/null)
 
 if [ "$EXISTING_RULES" != "[]" ]; then
   echo "Removing existing SSH rules..."
   aws ec2 revoke-security-group-ingress \
     --group-id $SECURITY_GROUP \
-    --ip-permissions "$EXISTING_RULES" 2>/dev/null || true
+    --ip-permissions "$EXISTING_RULES" >/dev/null 2>&1 || true
 fi
 
 # Add current IP
 echo "Adding SSH access for $MY_IP..."
 aws ec2 authorize-security-group-ingress \
   --group-id $SECURITY_GROUP \
-  --ip-permissions IpProtocol=tcp,FromPort=22,ToPort=22,IpRanges="[{CidrIp=$MY_IP/32,Description='Current IP'}]"
+  --ip-permissions IpProtocol=tcp,FromPort=22,ToPort=22,IpRanges="[{CidrIp=$MY_IP/32,Description='Current IP'}]" >/dev/null 2>&1
 
 echo "Security group updated to allow SSH from $MY_IP only"
 
@@ -58,7 +58,7 @@ SPOT_REQUEST=$(aws ec2 request-spot-instances \
   --type "persistent" \
   --launch-specification file://$TEMP_LAUNCH_SPEC \
   --query 'SpotInstanceRequests[0].SpotInstanceRequestId' \
-  --output text)
+  --output text 2>/dev/null)
 
 # Clean up temp file
 rm -f $TEMP_LAUNCH_SPEC
@@ -67,35 +67,60 @@ echo "Spot request: $SPOT_REQUEST"
 echo "Waiting for fulfillment..."
 
 # Wait for fulfillment
-aws ec2 wait spot-instance-request-fulfilled --spot-instance-request-ids $SPOT_REQUEST
+aws ec2 wait spot-instance-request-fulfilled --spot-instance-request-ids $SPOT_REQUEST >/dev/null 2>&1
 
 # Get instance ID
 INSTANCE_ID=$(aws ec2 describe-spot-instance-requests \
   --spot-instance-request-ids $SPOT_REQUEST \
   --query 'SpotInstanceRequests[0].InstanceId' \
-  --output text)
+  --output text 2>/dev/null)
 
 echo "Instance ID: $INSTANCE_ID"
 echo "Waiting for instance to be running..."
 
 # Wait for running
-aws ec2 wait instance-running --instance-ids $INSTANCE_ID
+aws ec2 wait instance-running --instance-ids $INSTANCE_ID >/dev/null 2>&1
 
-# Attach data volume
-echo "Attaching data volume..."
-aws ec2 attach-volume \
-  --volume-id $VOLUME_ID \
-  --instance-id $INSTANCE_ID \
-  --device /dev/sdf
+# Attach data volume (if not already attached)
+echo "Checking volume attachment..."
+CURRENT_ATTACHMENT=$(aws ec2 describe-volumes \
+  --volume-ids $VOLUME_ID \
+  --query 'Volumes[0].Attachments[0].InstanceId' \
+  --output text 2>/dev/null)
+
+if [ "$CURRENT_ATTACHMENT" != "$INSTANCE_ID" ]; then
+  echo "Attaching data volume..."
+  aws ec2 attach-volume \
+    --volume-id $VOLUME_ID \
+    --instance-id $INSTANCE_ID \
+    --device /dev/sdf >/dev/null 2>&1 || true
+else
+  echo "Volume already attached to this instance"
+fi
 
 # Wait a bit for volume to attach
 sleep 10
 
-# Get IP
-IP=$(aws ec2 describe-instances \
-  --instance-ids $INSTANCE_ID \
-  --query 'Reservations[0].Instances[0].PublicIpAddress' \
-  --output text)
+# Get IP - wait for it to be assigned
+echo "Waiting for public IP assignment..."
+IP=""
+MAX_ATTEMPTS=30
+ATTEMPT=0
+
+while [ -z "$IP" ] || [ "$IP" == "None" ]; do
+  if [ $ATTEMPT -ge $MAX_ATTEMPTS ]; then
+    echo "Error: Public IP not assigned after $MAX_ATTEMPTS attempts"
+    exit 1
+  fi
+  IP=$(aws ec2 describe-instances \
+    --instance-ids $INSTANCE_ID \
+    --query 'Reservations[0].Instances[0].PublicIpAddress' \
+    --output text 2>/dev/null)
+  if [ -z "$IP" ] || [ "$IP" == "None" ]; then
+    ATTEMPT=$((ATTEMPT + 1))
+    sleep 2
+  fi
+done
 
 echo "============================================"
 echo "Instance ready at: $IP"
@@ -106,7 +131,22 @@ echo ""
 # Save instance ID for stop script
 echo $INSTANCE_ID > $SCRIPT_DIR/.instance-id
 
-echo "Connecting..."
-sleep 5
+# Wait for SSH to be ready
+echo "Waiting for SSH to be ready..."
+MAX_SSH_ATTEMPTS=30
+SSH_ATTEMPT=0
+while [ $SSH_ATTEMPT -lt $MAX_SSH_ATTEMPTS ]; do
+  if timeout 3 bash -c "echo > /dev/tcp/$IP/22" 2>/dev/null; then
+    echo "SSH is ready"
+    break
+  fi
+  SSH_ATTEMPT=$((SSH_ATTEMPT + 1))
+  if [ $SSH_ATTEMPT -ge $MAX_SSH_ATTEMPTS ]; then
+    echo "Warning: SSH not ready after $MAX_SSH_ATTEMPTS attempts, attempting connection anyway..."
+  else
+    sleep 2
+  fi
+done
 
-ssh -i $KEY_FILE ubuntu@$IP
+echo "Connecting with: ssh -i $KEY_FILE ubuntu@$IP"
+ssh -i $KEY_FILE -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@$IP
