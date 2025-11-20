@@ -53,6 +53,18 @@ ln -sf /workspace/.aws "$HOME_DIR/.aws"
 rm -rf "$HOME_DIR/.ssh"
 ln -sf /workspace/.ssh "$HOME_DIR/.ssh"
 
+# Install and configure Tailscale
+echo "Setting up Tailscale..."
+if ! command -v tailscale &> /dev/null; then
+  echo "Installing Tailscale..."
+  curl -fsSL https://tailscale.com/install.sh | sh
+fi
+
+# Connect to Tailscale
+tailscale up --authkey=tskey-auth-ko1HUif8m511CNTRL-iFWseP26cxLK2Fb5WC3twL19gsaZ4HEFe --hostname=remote-dev
+
+echo "Tailscale configured and started"
+
 # Add to .bashrc
 echo "export PATH=\"/workspace/poetry/bin:/workspace/bin:\$PATH\"" >> "$HOME_DIR/.bashrc"
 echo 'parse_git_branch() { git branch 2>/dev/null | sed -n "s/^* //p"; }; export PS1="\[\e[1;32m\]\u@\h\[\e[0m\]:\[\e[1;34m\]\w\[\e[0m\] \[\e[1;33m\](\$(parse_git_branch))\[\e[0m\]\$ "' >> "$HOME_DIR/.bashrc"
