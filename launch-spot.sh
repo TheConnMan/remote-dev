@@ -94,6 +94,11 @@ if [ "$CURRENT_ATTACHMENT" != "$INSTANCE_ID" ]; then
     --volume-id $VOLUME_ID \
     --instance-id $INSTANCE_ID \
     --device /dev/sdf >/dev/null 2>&1 || true
+
+  # Explicitly ensure DeleteOnTermination is false for the data volume
+  aws ec2 modify-instance-attribute \
+    --instance-id $INSTANCE_ID \
+    --block-device-mappings "[{\"DeviceName\":\"/dev/sdf\",\"Ebs\":{\"DeleteOnTermination\":false}}]" >/dev/null 2>&1 || true
 else
   echo "Volume already attached to this instance"
 fi
@@ -128,25 +133,48 @@ echo "Instance ID: $INSTANCE_ID"
 echo "============================================"
 echo ""
 
+# Update SSH config
+echo "Updating SSH config for aws-dev..."
+python3 << EOF
+import re
+import os
+
+ip = "$IP"
+config_files = [
+    "${HOME}/.ssh/config",
+    "/mnt/c/Users/bccon/.ssh/config"
+]
+
+for config_path in config_files:
+    if not os.path.exists(config_path):
+        continue
+
+    with open(config_path, "r") as f:
+        lines = f.readlines()
+
+    in_aws_dev = False
+    updated = False
+
+    for i, line in enumerate(lines):
+        if line.strip() == "Host aws-dev":
+            in_aws_dev = True
+        elif line.startswith("Host ") and in_aws_dev:
+            in_aws_dev = False
+        elif in_aws_dev and re.match(r'^\s+HostName\s+', line):
+            # Preserve indentation
+            indent = len(line) - len(line.lstrip())
+            lines[i] = " " * indent + "HostName " + ip + "\n"
+            updated = True
+
+    if updated:
+        with open(config_path, "w") as f:
+            f.writelines(lines)
+        print(f"Updated {config_path}")
+EOF
+
 # Save instance ID for stop script
 echo $INSTANCE_ID > $SCRIPT_DIR/.instance-id
 
-# Wait for SSH to be ready
-echo "Waiting for SSH to be ready..."
-MAX_SSH_ATTEMPTS=30
-SSH_ATTEMPT=0
-while [ $SSH_ATTEMPT -lt $MAX_SSH_ATTEMPTS ]; do
-  if timeout 3 bash -c "echo > /dev/tcp/$IP/22" 2>/dev/null; then
-    echo "SSH is ready"
-    break
-  fi
-  SSH_ATTEMPT=$((SSH_ATTEMPT + 1))
-  if [ $SSH_ATTEMPT -ge $MAX_SSH_ATTEMPTS ]; then
-    echo "Warning: SSH not ready after $MAX_SSH_ATTEMPTS attempts, attempting connection anyway..."
-  else
-    sleep 2
-  fi
-done
-
-echo "Connecting with: ssh -i $KEY_FILE ubuntu@$IP"
-ssh -i $KEY_FILE -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@$IP
+echo ""
+echo "Launch successful!"
+echo "You can connect with: ssh aws-dev"

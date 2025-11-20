@@ -5,5 +5,19 @@
   "SecurityGroupIds": ["sg-0221ed06c817b633c"],
   "Placement": {
     "AvailabilityZone": "us-east-1f"
-  }
+  },
+  "BlockDeviceMappings": [
+    {
+      "DeviceName": "/dev/sda1",
+      "Ebs": {
+        "VolumeSize": 20,
+        "VolumeType": "gp3",
+        "DeleteOnTermination": true
+      }
+    },
+    {
+      "DeviceName": "/dev/sdf",
+      "NoDevice": ""
+    }
+  ]
 }
