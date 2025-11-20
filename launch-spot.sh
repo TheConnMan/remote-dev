@@ -19,7 +19,7 @@ echo "Getting your current IP..."
 MY_IP=$(curl -s https://checkip.amazonaws.com)
 echo "Your IP: $MY_IP"
 
-# Update security group - remove ALL existing SSH rules, then add current IP
+# Update security group - remove all SSH rules, then add current IP
 echo "Updating security group..."
 
 # Get all existing SSH rules and remove them
@@ -29,19 +29,19 @@ EXISTING_RULES=$(aws ec2 describe-security-groups \
   --output json 2>/dev/null)
 
 if [ "$EXISTING_RULES" != "[]" ]; then
-  echo "Removing existing SSH rules..."
+  echo "Removing all existing SSH rules..."
   aws ec2 revoke-security-group-ingress \
     --group-id $SECURITY_GROUP \
     --ip-permissions "$EXISTING_RULES" >/dev/null 2>&1 || true
 fi
 
-# Add current IP
-echo "Adding SSH access for $MY_IP..."
+# Add current IP and 100.93.196.40/32
+echo "Adding SSH access for $MY_IP and 100.93.196.40/32..."
 aws ec2 authorize-security-group-ingress \
   --group-id $SECURITY_GROUP \
-  --ip-permissions IpProtocol=tcp,FromPort=22,ToPort=22,IpRanges="[{CidrIp=$MY_IP/32,Description='Current IP'}]" >/dev/null 2>&1
+  --ip-permissions IpProtocol=tcp,FromPort=22,ToPort=22,IpRanges="[{CidrIp=$MY_IP/32,Description='Current IP'},{CidrIp=100.93.196.40/32,Description='Persistent IP'}]" >/dev/null 2>&1
 
-echo "Security group updated to allow SSH from $MY_IP only"
+echo "Security group updated to allow SSH from $MY_IP and 100.93.196.40/32"
 
 # Base64 encode user-data.sh from script directory
 USER_DATA_B64=$(base64 -w 0 $SCRIPT_DIR/user-data.sh)
