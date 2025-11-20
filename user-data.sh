@@ -49,7 +49,12 @@ echo "Setting up symlinks for $HOME_DIR..."
 # Create symlinks
 ln -sf /workspace/git/theconnman/claude-settings "$HOME_DIR/.claude"
 ln -sf /workspace/git "$HOME_DIR/git"
+ln -sf /workspace/.aws "$HOME_DIR/.aws"
 rm -rf "$HOME_DIR/.ssh"
 ln -sf /workspace/.ssh "$HOME_DIR/.ssh"
+
+# Add to .bashrc
+echo "export PATH=\"/workspace/poetry/bin:/workspace/bin:\$PATH\"" >> "$HOME_DIR/.bashrc"
+echo 'parse_git_branch() { git branch 2>/dev/null | sed -n "s/^* //p"; }; export PS1="\[\e[1;32m\]\u@\h\[\e[0m\]:\[\e[1;34m\]\w\[\e[0m\] \[\e[1;33m\](\$(parse_git_branch))\[\e[0m\]\$ "' >> "$HOME_DIR/.bashrc"
 
 echo "=== User-data script completed at $(date) ==="
