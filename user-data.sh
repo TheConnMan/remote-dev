@@ -70,4 +70,11 @@ tailscale up --authkey=tskey-auth-ko1HUif8m511CNTRL-iFWseP26cxLK2Fb5WC3twL19gsaZ
 
 echo "Tailscale configured and started"
 
+# Upgrade and install packages
+echo "Post-setup installs"
+apt-get update
+apt-get upgrade -y
+
+snap install kubectl --classic
+
 echo "=== User-data script completed at $(date) ==="
