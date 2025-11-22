@@ -54,6 +54,10 @@ rm -rf "$HOME_DIR/.ssh"
 ln -sf /workspace/.ssh "$HOME_DIR/.ssh"
 ln -sf /workspace/.bashrc "$HOME_DIR/.bashrc"
 
+# Setup bash history on /workspace
+rm -f "$HOME_DIR/.bash_history"
+ln -sf /workspace/.bash_history "$HOME_DIR/.bash_history"
+
 # Install and configure Tailscale
 echo "Setting up Tailscale..."
 if ! command -v tailscale &> /dev/null; then
