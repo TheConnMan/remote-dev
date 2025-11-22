@@ -53,6 +53,7 @@ ln -sf /workspace/.aws "$HOME_DIR/.aws"
 rm -rf "$HOME_DIR/.ssh"
 ln -sf /workspace/.ssh "$HOME_DIR/.ssh"
 ln -sf /workspace/.bashrc "$HOME_DIR/.bashrc"
+ln -sf /workspace/.config/gh "$HOME_DIR/.config/gh"
 
 # Setup bash history on /workspace
 rm -f "$HOME_DIR/.bash_history"
@@ -74,6 +75,8 @@ echo "Tailscale configured and started"
 echo "Post-setup installs"
 apt-get update
 apt-get upgrade -y
+apt-get install -y \
+  gh
 
 snap install kubectl --classic
 
