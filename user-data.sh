@@ -53,7 +53,9 @@ ln -sf /workspace/.aws "$HOME_DIR/.aws"
 rm -rf "$HOME_DIR/.ssh"
 ln -sf /workspace/.ssh "$HOME_DIR/.ssh"
 ln -sf /workspace/.bashrc "$HOME_DIR/.bashrc"
+mkdir -p "$HOME_DIR/.config"
 ln -sf /workspace/.config/gh "$HOME_DIR/.config/gh"
+ln -sf /workspace/.cursor-server "$HOME_DIR/.cursor-server"
 
 # Setup bash history on /workspace
 rm -f "$HOME_DIR/.bash_history"
@@ -76,7 +78,10 @@ echo "Post-setup installs"
 apt-get update
 apt-get upgrade -y
 apt-get install -y \
-  gh
+  gh \
+  git-lfs \
+  dos2unix \
+  libpq-dev
 
 snap install kubectl --classic
 
