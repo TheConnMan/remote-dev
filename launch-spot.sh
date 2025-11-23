@@ -43,8 +43,31 @@ aws ec2 authorize-security-group-ingress \
 
 echo "Security group updated to allow SSH from $MY_IP and 100.93.196.40/32"
 
-# Base64 encode user-data.sh from script directory
-USER_DATA_B64=$(base64 -w 0 $SCRIPT_DIR/user-data.sh)
+# Load Tailscale API key from local .env file
+ENV_FILE="$SCRIPT_DIR/.env"
+if [ ! -f "$ENV_FILE" ]; then
+  echo "ERROR: .env file not found at $ENV_FILE"
+  echo "Please create it from .env.example and set your TAILSCALE_API_KEY"
+  exit 1
+fi
+
+# Source .env file to get TAILSCALE_API_KEY
+set -a
+source "$ENV_FILE"
+set +a
+
+if [ -z "$TAILSCALE_API_KEY" ]; then
+  echo "ERROR: TAILSCALE_API_KEY not set in .env file"
+  exit 1
+fi
+
+# Create temporary user-data script with injected API key
+TEMP_USER_DATA=$(mktemp)
+sed "s|__TAILSCALE_API_KEY__|$TAILSCALE_API_KEY|g" "$SCRIPT_DIR/user-data.sh" > "$TEMP_USER_DATA"
+
+# Base64 encode user-data.sh with injected key
+USER_DATA_B64=$(base64 -w 0 "$TEMP_USER_DATA")
+rm -f "$TEMP_USER_DATA"
 
 # Create temporary launch spec with encoded user data
 TEMP_LAUNCH_SPEC=$(mktemp)

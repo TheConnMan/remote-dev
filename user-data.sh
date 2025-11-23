@@ -61,6 +61,9 @@ ln -sf /workspace/.cursor-server "$HOME_DIR/.cursor-server"
 rm -f "$HOME_DIR/.bash_history"
 ln -sf /workspace/.bash_history "$HOME_DIR/.bash_history"
 
+# Tailscale API key (injected by launch-spot.sh)
+TAILSCALE_API_KEY="__TAILSCALE_API_KEY__"
+
 # Install and configure Tailscale
 echo "Setting up Tailscale..."
 if ! command -v tailscale &> /dev/null; then
@@ -69,7 +72,7 @@ if ! command -v tailscale &> /dev/null; then
 fi
 
 # Connect to Tailscale
-tailscale up --authkey=tskey-auth-ko1HUif8m511CNTRL-iFWseP26cxLK2Fb5WC3twL19gsaZ4HEFe --hostname=remote-dev
+tailscale up --authkey="$TAILSCALE_API_KEY" --hostname="remote-dev"
 
 echo "Tailscale configured and started"
 
