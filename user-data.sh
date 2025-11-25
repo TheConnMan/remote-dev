@@ -84,7 +84,12 @@ apt-get install -y \
   gh \
   git-lfs \
   dos2unix \
-  libpq-dev
+  libpq-dev \
+  zip
+
+newgrp docker
+groupadd docker
+usermod -aG docker ubuntu
 
 snap install kubectl --classic
 
