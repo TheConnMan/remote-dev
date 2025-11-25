@@ -10,38 +10,11 @@ export AWS_PAGER=""
 AMI_ID="ami-0d3d27397471af253"
 VOLUME_ID="vol-0d49d85263648ccbb"
 KEY_NAME="Remote Dev"
-SECURITY_GROUP="sg-0221ed06c817b633c"
 KEY_FILE="${HOME}/.aws/pem/remote-dev.pem"
 LAUNCH_SPEC="$SCRIPT_DIR/launch-spec.json"
 
-# Get current public IP
-echo "Getting your current IP..."
-MY_IP=$(curl -s https://checkip.amazonaws.com)
-echo "Your IP: $MY_IP"
-
-# Update security group - remove all SSH rules, then add current IP
-echo "Updating security group..."
-
-# Get all existing SSH rules and remove them
-EXISTING_RULES=$(aws ec2 describe-security-groups \
-  --group-ids $SECURITY_GROUP \
-  --query 'SecurityGroups[0].IpPermissions[?FromPort==`22`]' \
-  --output json 2>/dev/null)
-
-if [ "$EXISTING_RULES" != "[]" ]; then
-  echo "Removing all existing SSH rules..."
-  aws ec2 revoke-security-group-ingress \
-    --group-id $SECURITY_GROUP \
-    --ip-permissions "$EXISTING_RULES" >/dev/null 2>&1 || true
-fi
-
-# Add current IP and 100.93.196.40/32
-echo "Adding SSH access for $MY_IP and 100.93.196.40/32..."
-aws ec2 authorize-security-group-ingress \
-  --group-id $SECURITY_GROUP \
-  --ip-permissions IpProtocol=tcp,FromPort=22,ToPort=22,IpRanges="[{CidrIp=$MY_IP/32,Description='Current IP'},{CidrIp=100.93.196.40/32,Description='Persistent IP'}]" >/dev/null 2>&1
-
-echo "Security group updated to allow SSH from $MY_IP and 100.93.196.40/32"
+# Update security group with current IP
+"$SCRIPT_DIR/update-ip.sh"
 
 # Load Tailscale API key from local .env file
 ENV_FILE="$SCRIPT_DIR/.env"
