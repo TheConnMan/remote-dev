@@ -86,11 +86,14 @@ apt-get install -y \
   git-lfs \
   dos2unix \
   libpq-dev \
-  zip
+  zip \
+  docker-compose
 
 newgrp docker
 groupadd docker
 usermod -aG docker ubuntu
+
+curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 
 snap install kubectl --classic
 
