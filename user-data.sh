@@ -55,6 +55,7 @@ ln -sf /workspace/.ssh "$HOME_DIR/.ssh"
 ln -sf /workspace/.bashrc "$HOME_DIR/.bashrc"
 mkdir -p "$HOME_DIR/.config"
 ln -sf /workspace/.config/gh "$HOME_DIR/.config/gh"
+ln -sf /workspace/.cursor "$HOME_DIR/.cursor"
 ln -sf /workspace/.cursor-server "$HOME_DIR/.cursor-server"
 
 # Setup bash history on /workspace
