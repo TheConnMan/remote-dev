@@ -51,7 +51,8 @@ echo "Requesting spot instance..."
 SPOT_REQUEST=$(aws ec2 request-spot-instances \
   --spot-price "0.15" \
   --instance-count 1 \
-  --type "persistent" \
+  --type "one-time" \
+  --tag-specifications 'ResourceType=spot-instances-request,Tags=[{Key=Project,Value=remote-dev}]' \
   --launch-specification file://$TEMP_LAUNCH_SPEC \
   --query 'SpotInstanceRequests[0].SpotInstanceRequestId' \
   --output text 2>/dev/null)
@@ -72,6 +73,13 @@ INSTANCE_ID=$(aws ec2 describe-spot-instance-requests \
   --output text 2>/dev/null)
 
 echo "Instance ID: $INSTANCE_ID"
+
+# Tag the instance
+echo "Tagging instance..."
+aws ec2 create-tags \
+  --resources $INSTANCE_ID \
+  --tags Key=Project,Value=remote-dev >/dev/null 2>&1
+
 echo "Waiting for instance to be running..."
 
 # Wait for running
