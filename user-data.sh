@@ -90,7 +90,6 @@ apt-get install -y \
   docker-compose
 
 newgrp docker
-groupadd docker
 usermod -aG docker ubuntu
 
 curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
