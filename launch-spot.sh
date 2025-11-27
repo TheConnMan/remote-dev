@@ -46,6 +46,21 @@ rm -f "$TEMP_USER_DATA"
 TEMP_LAUNCH_SPEC=$(mktemp)
 jq --arg userdata "$USER_DATA_B64" '.UserData = $userdata' $LAUNCH_SPEC > $TEMP_LAUNCH_SPEC
 
+# Check volume state before launching
+echo "Checking volume state..."
+VOLUME_STATE=$(aws ec2 describe-volumes \
+  --volume-ids $VOLUME_ID \
+  --query 'Volumes[0].State' \
+  --output text 2>/dev/null)
+
+if [ "$VOLUME_STATE" != "available" ]; then
+  echo "ERROR: Volume $VOLUME_ID is not available (current state: $VOLUME_STATE)"
+  echo "Please ensure the volume is available before launching an instance"
+  rm -f $TEMP_LAUNCH_SPEC
+  exit 1
+fi
+echo "Volume is available"
+
 # Create spot request
 echo "Requesting spot instance..."
 SPOT_REQUEST=$(aws ec2 request-spot-instances \
