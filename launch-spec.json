@@ -1,6 +1,6 @@
 {
   "ImageId": "ami-0d3d27397471af253",
-  "InstanceType": "t3a.large",
+  "InstanceType": "t3.large",
   "KeyName": "Remote Dev",
   "SecurityGroupIds": ["sg-0221ed06c817b633c"],
   "Placement": {
