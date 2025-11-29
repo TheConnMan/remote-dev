@@ -93,7 +93,7 @@ echo "Instance ID: $INSTANCE_ID"
 echo "Tagging instance..."
 aws ec2 create-tags \
   --resources $INSTANCE_ID \
-  --tags Key=Project,Value=remote-dev >/dev/null 2>&1
+  --tags Key=Project,Value=remote-dev Key=Name,Value="Remote Dev" >/dev/null 2>&1
 
 echo "Waiting for instance to be running..."
 
