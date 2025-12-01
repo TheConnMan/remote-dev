@@ -153,43 +153,7 @@ echo "============================================"
 echo ""
 
 # Update SSH config
-echo "Updating SSH config for aws-dev..."
-python3 << EOF
-import re
-import os
-
-ip = "$IP"
-config_files = [
-    "${HOME}/.ssh/config",
-    "/mnt/c/Users/bccon/.ssh/config"
-]
-
-for config_path in config_files:
-    if not os.path.exists(config_path):
-        continue
-
-    with open(config_path, "r") as f:
-        lines = f.readlines()
-
-    in_aws_dev = False
-    updated = False
-
-    for i, line in enumerate(lines):
-        if line.strip() == "Host aws-dev":
-            in_aws_dev = True
-        elif line.startswith("Host ") and in_aws_dev:
-            in_aws_dev = False
-        elif in_aws_dev and re.match(r'^\s+HostName\s+', line):
-            # Preserve indentation
-            indent = len(line) - len(line.lstrip())
-            lines[i] = " " * indent + "HostName " + ip + "\n"
-            updated = True
-
-    if updated:
-        with open(config_path, "w") as f:
-            f.writelines(lines)
-        print(f"Updated {config_path}")
-EOF
+"$SCRIPT_DIR/update-ssh-config.sh" "$IP"
 
 # Save instance ID for stop script
 echo $INSTANCE_ID > $SCRIPT_DIR/.instance-id
