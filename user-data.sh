@@ -102,4 +102,9 @@ npm install -g @openai/codex
 # Final upgrade
 apt-get upgrade -y
 
+# Schedule auto-shutdown after 16 hours (960 minutes) as a safety measure
+# This prevents instances from running indefinitely if forgotten
+echo "Scheduling auto-shutdown in 16 hours..."
+shutdown -h +960 "Instance auto-shutdown after 16 hours of life"
+
 echo "=== User-data script completed at $(date) ==="
