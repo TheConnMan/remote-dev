@@ -96,4 +96,9 @@ curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 
 snap install kubectl --classic
 
+# Schedule auto-shutdown after 16 hours (960 minutes) as a safety measure
+# This prevents instances from running indefinitely if forgotten
+echo "Scheduling auto-shutdown in 16 hours..."
+shutdown -h +960 "Instance auto-shutdown after 16 hours of life"
+
 echo "=== User-data script completed at $(date) ==="
