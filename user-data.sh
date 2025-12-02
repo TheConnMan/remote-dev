@@ -92,8 +92,14 @@ apt-get install -y \
 newgrp docker
 usermod -aG docker ubuntu
 
+# Install k8 utilities
 curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
-
 snap install kubectl --classic
+
+# Install node modules
+npm install -g @openai/codex
+
+# Final upgrade
+apt-get upgrade -y
 
 echo "=== User-data script completed at $(date) ==="
