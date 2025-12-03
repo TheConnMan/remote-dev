@@ -96,10 +96,8 @@ usermod -aG docker ubuntu
 curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 snap install kubectl --classic
 
-# Install node modules
-npm install -g @openai/codex
-
 # Final upgrade
+sysctl fs.inotify.max_user_watches=524288
 apt-get upgrade -y
 
 # Schedule auto-shutdown after 16 hours (960 minutes) as a safety measure
