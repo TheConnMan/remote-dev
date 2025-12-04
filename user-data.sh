@@ -69,6 +69,9 @@ mkswap /swapfile
 swapon /swapfile
 echo '/swapfile none swap sw 0 0' | tee -a /etc/fstab
 
+# File watcher limit
+sysctl fs.inotify.max_user_watches=524288
+
 # Tailscale API key (injected by launch-spot.sh)
 TAILSCALE_API_KEY="__TAILSCALE_API_KEY__"
 
@@ -104,7 +107,6 @@ curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 snap install kubectl --classic
 
 # Final upgrade
-sysctl fs.inotify.max_user_watches=524288
 apt-get upgrade -y
 
 # Schedule auto-shutdown after 16 hours (960 minutes) as a safety measure
