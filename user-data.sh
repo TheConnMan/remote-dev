@@ -62,6 +62,13 @@ ln -sf /workspace/.cursor-server "$HOME_DIR/.cursor-server"
 rm -f "$HOME_DIR/.bash_history"
 ln -sf /workspace/.bash_history "$HOME_DIR/.bash_history"
 
+# Add swap
+fallocate -l 8G /swapfile
+chmod 600 /swapfile
+mkswap /swapfile
+swapon /swapfile
+echo '/swapfile none swap sw 0 0' | tee -a /etc/fstab
+
 # Tailscale API key (injected by launch-spot.sh)
 TAILSCALE_API_KEY="__TAILSCALE_API_KEY__"
 
