@@ -39,8 +39,8 @@ else
   echo "Volume mounted successfully"
 fi
 
-chown -R ubuntu:ubuntu /workspace
-echo "Ownership set"
+# chown -R ubuntu:ubuntu /workspace
+# echo "Ownership set"
 
 # Run dotfiles setup for ubuntu user
 HOME_DIR="/home/ubuntu"
