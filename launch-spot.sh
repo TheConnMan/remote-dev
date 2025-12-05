@@ -64,7 +64,7 @@ echo "Volume is available"
 # Create spot request
 echo "Requesting spot instance..."
 SPOT_REQUEST=$(aws ec2 request-spot-instances \
-  --spot-price "0.15" \
+  --spot-price "0.10" \
   --instance-count 1 \
   --type "one-time" \
   --tag-specifications 'ResourceType=spot-instances-request,Tags=[{Key=Project,Value=remote-dev}]' \
