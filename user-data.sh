@@ -99,7 +99,8 @@ apt-get install -y \
   dos2unix \
   libpq-dev \
   zip \
-  docker-compose
+  docker-compose \
+  at
 
 newgrp docker
 usermod -aG docker ubuntu
@@ -109,11 +110,16 @@ curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 snap install kubectl --classic
 
 # Final upgrade
+apt-get update
 apt-get upgrade -y
+apt-get autoremove -y
 
 # Schedule auto-shutdown after 16 hours (960 minutes) as a safety measure
 # This prevents instances from running indefinitely if forgotten
+# Using 'at' instead of 'shutdown' to avoid broadcasting messages
 echo "Scheduling auto-shutdown in 16 hours..."
-shutdown -h +960 "Instance auto-shutdown after 16 hours of life"
+systemctl enable atd
+systemctl start atd
+echo "shutdown -h now" | at now + 960 minutes
 
 echo "=== User-data script completed at $(date) ==="
