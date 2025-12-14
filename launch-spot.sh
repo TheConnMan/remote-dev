@@ -6,6 +6,30 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # Disable AWS CLI pager to prevent interactive editors
 export AWS_PAGER=""
 
+# Parse size flag (default: use launch-spec.json value)
+INSTANCE_TYPE=""
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --large)
+      INSTANCE_TYPE="t3.large"
+      shift
+      ;;
+    --medium)
+      INSTANCE_TYPE="t3.medium"
+      shift
+      ;;
+    --micro)
+      INSTANCE_TYPE="t3.micro"
+      shift
+      ;;
+    *)
+      echo "Unknown option: $1"
+      echo "Usage: $0 [--large|--medium|--micro]"
+      exit 1
+      ;;
+  esac
+done
+
 # Configuration
 AMI_ID="ami-0d3d27397471af253"
 VOLUME_ID="vol-0d49d85263648ccbb"
@@ -42,9 +66,15 @@ sed "s|__TAILSCALE_API_KEY__|$TAILSCALE_API_KEY|g" "$SCRIPT_DIR/user-data.sh" > 
 USER_DATA_B64=$(base64 -w 0 "$TEMP_USER_DATA")
 rm -f "$TEMP_USER_DATA"
 
-# Create temporary launch spec with encoded user data
+# Create temporary launch spec with encoded user data (and optional instance type override)
 TEMP_LAUNCH_SPEC=$(mktemp)
-jq --arg userdata "$USER_DATA_B64" '.UserData = $userdata' $LAUNCH_SPEC > $TEMP_LAUNCH_SPEC
+if [ -n "$INSTANCE_TYPE" ]; then
+  echo "Using instance type: $INSTANCE_TYPE"
+  jq --arg userdata "$USER_DATA_B64" --arg instancetype "$INSTANCE_TYPE" \
+    '.UserData = $userdata | .InstanceType = $instancetype' $LAUNCH_SPEC > $TEMP_LAUNCH_SPEC
+else
+  jq --arg userdata "$USER_DATA_B64" '.UserData = $userdata' $LAUNCH_SPEC > $TEMP_LAUNCH_SPEC
+fi
 
 # Check volume state before launching
 echo "Checking volume state..."
