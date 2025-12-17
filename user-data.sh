@@ -48,7 +48,6 @@ echo "Setting up symlinks for $HOME_DIR..."
 
 # Create symlinks
 ln -sf /workspace/git/theconnman/claude-settings "$HOME_DIR/.claude"
-ln -sf /workspace/git "$HOME_DIR/git"
 ln -sf /workspace/.aws "$HOME_DIR/.aws"
 rm -rf "$HOME_DIR/.ssh"
 ln -sf /workspace/.ssh "$HOME_DIR/.ssh"
